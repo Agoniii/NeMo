@@ -460,6 +460,7 @@ class MegatronBaseModel(NLPModel):
         model_parallel_config = self.build_model_parallel_config()
 
         add_bias_linear = self.cfg.get('bias', True)
+        add_qkv_bias = self.cfg.get('qkv_bias', False)
 
         activation = self.cfg.get('activation', 'gelu')
         gated_linear_unit = activation.endswith('glu')
@@ -514,6 +515,7 @@ class MegatronBaseModel(NLPModel):
             'apply_residual_connection_post_layernorm': False,  # we don't use this in NeMo
             'layernorm_zero_centered_gamma': False,
             'add_bias_linear': add_bias_linear,
+            'add_qkv_bias': add_qkv_bias,
             'gated_linear_unit': gated_linear_unit,
             'activation_func': activation_func,
             'normalization': normalization,
