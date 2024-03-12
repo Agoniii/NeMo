@@ -168,7 +168,7 @@ def convert(input_nemo_file, output_hf_file, precision=None, cpu_only=False) -> 
         checkpoint[v_weights_base_name] = param_to_weights(qkv_weights[v_slice].reshape(-1, hidden_size))
         
         # qkv bias
-        qkv_bias = model.state_dict()[f'model.decoder.layers.{l}.self_attention.linear_qkv.weight']
+        qkv_bias = model.state_dict()[f'model.decoder.layers.{l}.self_attention.linear_qkv.bias']
         qkv_bias = qkv_bias.reshape([qkv_total_dim, head_size])
 
         q_slice = torch.cat(
