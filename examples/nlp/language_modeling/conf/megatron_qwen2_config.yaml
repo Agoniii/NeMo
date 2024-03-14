@@ -105,17 +105,17 @@ model:
   fp16_lm_cross_entropy: False # Move the cross entropy unreduced loss calculation for lm head to fp16
 
   # Megatron O2-style half-precision
-  megatron_amp_O2: False # Enable O2-level automatic mixed precision using main parameters
+  megatron_amp_O2: True # Enable O2-level automatic mixed precision using main parameters
   grad_allreduce_chunk_size_mb: 125
 
   # Fusion
   grad_div_ar_fusion: True # Fuse grad division into torch.distributed.all_reduce. Only used with O2 and no pipeline parallelism..
   gradient_accumulation_fusion: False # Fuse weight gradient accumulation to GEMMs. Only used with pipeline parallelism and O2.
-  bias_activation_fusion: False # Use a kernel that fuses the bias addition from weight matrices with the subsequent activation function.
+  bias_activation_fusion: True # Use a kernel that fuses the bias addition from weight matrices with the subsequent activation function.
   bias_dropout_add_fusion: False # Use a kernel that fuses the bias addition, dropout and residual connection addition.
   masked_softmax_fusion: True # Use a kernel that fuses the attention softmax with it's mask.
   get_attention_mask_from_fusion: True # When using fused softmax it will create the attention mask so we won't copy it to the pipeline stages.
-  apply_rope_fusion: False # Use a kernel to add rotary positional embeddings. Only used if position_embedding_type=rope
+  apply_rope_fusion: True # Use a kernel to add rotary positional embeddings. Only used if position_embedding_type=rope
 
 
   # Miscellaneous
@@ -208,16 +208,20 @@ model:
     end_step: 10 # Global batch to end profiling
     ranks: [0] # Global rank IDs to profile
     gen_shape: False # Generate model and kernel details including input shapes
-  
+
   optim:
-    name: fused_adam
-    lr: 2e-4
-    weight_decay: 0.01 
-    betas: 
+    name: distributed_fused_adam
+    lr: 0.00015
+    weight_decay: 0.1
+    betas:
     - 0.9
-    - 0.98
+    - 0.95
+    bucket_cap_mb: 125
+    overlap_grad_sync: True
+    overlap_param_sync: True
+    contiguous_grad_buffer: True
     sched:
       name: CosineAnnealing
-      warmup_steps: 500
-      constant_steps: 50000
-      min_lr: 2e-5
+      warmup_steps: 2000
+      constant_steps: 11873
+      min_lr: 1.0e-05
