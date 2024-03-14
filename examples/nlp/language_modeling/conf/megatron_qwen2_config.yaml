@@ -1,4 +1,4 @@
-name: megatron_llama
+name: megatron_qwen2
 restore_from_path: null # used when starting from a .nemo file
 
 trainer:
@@ -23,7 +23,7 @@ trainer:
 exp_manager:
   explicit_log_dir: null
   exp_dir: null
-  name: megatron_llama
+  name: megatron_qwen2
   create_wandb_logger: False
   wandb_logger_kwargs:
     project: null

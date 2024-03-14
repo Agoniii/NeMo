@@ -70,7 +70,10 @@ def load_config(qwen_config):
         nemo_config.num_query_groups = qwen_config['num_key_value_heads']
     nemo_config.use_cpu_initialization = True
     nemo_config.activation = 'fast-swiglu'
-    nemo_config.tokenizer.model = qwen_config['tokenizer_model']
+    nemo_config.tokenizer.type = qwen_config['tokenizer_model']
+    nemo_config.tokenizer.model = qwen_config['tokenizer_model'] +'/vocab.json'
+    nemo_config.override_vocab_size = qwen_config['vocab_size']
+
     base = 128
     while qwen_config['vocab_size'] % base != 0:
         base //= 2
@@ -84,7 +87,7 @@ def convert(args):
     model = Qwen2ForCausalLM.from_pretrained(args.in_file)
     tokenizer = Qwen2Tokenizer.from_pretrained(args.in_file)
     hf_config = vars(model.config)
-    hf_config['tokenizer_model'] = str(tokenizer.vocab_file)
+    hf_config['tokenizer_model'] = str(args.in_file)
     print(f"hf_config: {hf_config}")
     print("named parameters:")
     for name, param in model.named_parameters():
