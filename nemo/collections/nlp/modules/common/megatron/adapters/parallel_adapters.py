@@ -237,15 +237,16 @@ class ParallelLinearAdapter(nn.Module, AdapterModuleUtil):
 
         # revert config change in case it is read elsewhere
         model_parallel_config.sequence_parallel = self._sequence_parallel
-        if self._sequence_parallel:
+        if self._sequence_parallel and not input_is_parallel:
             from importlib.metadata import version
 
             from pkg_resources import packaging
 
             te_version = packaging.version.Version(version("transformer-engine"))
-            if te_version >= packaging.version.Version("1.5.0dev"):
+            if te_version >= packaging.version.Version("1.5.0dev") and not model_parallel_config.tp_comm_overlap:
                 # TE 1.5 introduces the option `return_layernorm_output_gathered`, so the all gather
                 # in the forward method is not needed, so set self._sequence_parallel to False
+                # unless TP communication overlap is used
                 self._sequence_parallel = False
 
     def _get_init_fn(self, init_method: str):
