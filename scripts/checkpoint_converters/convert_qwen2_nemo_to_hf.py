@@ -26,24 +26,24 @@ from nemo.collections.nlp.parts.nlp_overrides import NLPDDPStrategy
 from nemo.utils import logging
 
 """
-Script to convert a qwen2 checkpoint in nemo (mcore path) into a HuggingFace checkpoint.
+Script to convert a QWen2 checkpoint in nemo (mcore path) into a HuggingFace checkpoint.
 This script can be used to 1) generate only the HF weights, or 2) generate an entire HF model folder.
 
 1) Generate only HF weights from a nemo file:
 
-    python convert_nemo_qwen2_to_hf.py \
-    --in-file /path/to/file.nemo or /path/to/extracted_folder \
-    --out-file /path/to/pytorch_model.bin
+    python convert_qwen2_nemo_to_hf.py \
+    --input_name_or_path /path/to/file.nemo or /path/to/extracted_folder \
+    --output_path /path/to/pytorch_model.bin
     
 2) Generate the full HF model folder
 
-    python convert_nemo_qwen2_to_hf.py \
-    --in-file /path/to/file.nemo or /path/to/extracted_folder \
-    --out-file /path/to/pytorch_model.bin \
-    --hf-in-path /path/to/input_hf_folder \
-    --hf-out-path /path/to/output_hf_folder \
-    --in-tokenizer /path/to/tokenizer \
-    --hf-out-tokenizer /path/to/output_tokenizer \
+    python convert_qwen2_nemo_to_hf.py \
+    --input_name_or_path /path/to/file.nemo or /path/to/extracted_folder \
+    --output_path /path/to/pytorch_model.bin \
+    --hf_input_path /path/to/input_hf_folder \
+    --hf_output_path /path/to/output_hf_folder \
+    --input_tokenizer /path/to/tokenizer \
+    --hf_output_tokenizer /path/to/output_tokenizer \
 
     Use the --cpu-only flag if the model cannot fit in the GPU (e.g. qwen1.5 72b). 
     However this option makes the conversion script significantly slower.
@@ -53,29 +53,32 @@ This script can be used to 1) generate only the HF weights, or 2) generate an en
 def get_args():
     parser = ArgumentParser()
     parser.add_argument(
-        "--in-file", type=str, default=None, required=True, help="Path to .nemo file or extracted folder",
+        "--input_name_or_path", type=str, default=None, required=True, help="Path to .nemo file or extracted folder",
     )
-    parser.add_argument("--out-file", type=str, default=None, required=True, help="Path to HF .bin file")
+    parser.add_argument("--output_path", type=str, default=None, required=True, help="Path to HF .bin file")
     parser.add_argument(
-        "--hf-in-path",
+        "--hf_input_path",
         type=str,
         default=None,
         help="A HF model path, " "e.g. a folder containing https://huggingface.co/Qwen/Qwen1.5-72B/tree/main",
     )
     parser.add_argument(
-        "--hf-out-path",
+        "--hf_output_path",
         type=str,
         default=None,
         help="Output HF model path, " "with the same format as above but user's own weights",
     )
     parser.add_argument(
-        "--in-tokenizer",
+        "--input_tokenizer",
         type=str,
         default=None,
         help="Path to tokenizer used for the input nemo model. (need to extract the .nemo file first)",
     )
     parser.add_argument(
-        "--hf-out-tokenizer", type=str, default=None, help="Path to save the tokenizer used for the output HF model.",
+        "--hf_output_tokenizer",
+        type=str,
+        default=None,
+        help="Path to save the tokenizer used for the output HF model.",
     )
     parser.add_argument(
         "--precision",
@@ -259,15 +262,18 @@ def replace_hf_weights_and_tokenizer(
 
 if __name__ == '__main__':
     args = get_args()
-    if not args.hf_out_tokenizer and args.hf_out_path:
-        args.hf_out_tokenizer = args.hf_out_path
-
-    dtype = convert(args.in_file, args.out_file, precision=args.precision, cpu_only=args.cpu_only)
-
-    if args.hf_in_path and args.hf_out_path:
+    if not args.hf_output_tokenizer and args.hf_output_path:
+        args.hf_output_tokenizer = args.hf_output_path
+    dtype = convert(args.input_name_or_path, args.output_path, precision=args.precision, cpu_only=args.cpu_only)
+    if args.hf_input_path and args.hf_output_path:
         replace_hf_weights_and_tokenizer(
-            args.out_file, dtype, args.hf_in_path, args.hf_out_path, args.in_tokenizer, args.hf_out_tokenizer,
+            args.output_path,
+            dtype,
+            args.hf_input_path,
+            args.hf_output_path,
+            args.input_tokenizer,
+            args.hf_output_tokenizer,
         )
     else:
-        logging.info("`hf-in-path` and/or `hf-out-path` not provided, not generating full HF model.")
-        logging.info(f".bin file is saved to {args.out_file}")
+        logging.info("`hf_input_path` and/or `hf_output_path` not provided, not generating full HF model.")
+        logging.info(f".bin file is saved to {args.output_path}")
